@@ -177,10 +177,10 @@ struct HourlyColumn: View {
             if fogScore.percentage > 0 {
                 Text("\(fogScore.percentage)%")
                     .font(.system(size: 11 * fontScale, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(fogColor)
                     .frame(height: 20 * fontScale)
                     .frame(maxWidth: .infinity)
-                    .background(fogColor)
+                    .background(fogBackgroundColor)
                     .clipShape(RoundedRectangle(cornerRadius: 4))
             } else {
                 Text("—")
@@ -199,9 +199,9 @@ struct HourlyColumn: View {
     private var cloudBackgroundColor: Color {
         let coverage = Double(forecast.cloudCover) / 100.0
         // Interpolate from dark blue (0%) to light gray/white (100%)
-        let red = 20 + (220 * coverage)
-        let green = 40 + (200 * coverage)
-        let blue = 80 + (140 * coverage)
+        let red = 10 + (230 * coverage)
+        let green = 20 + (220 * coverage)
+        let blue = 80 + (155 * coverage)
         return Color(red: red/255, green: green/255, blue: blue/255)
     }
     
@@ -210,8 +210,23 @@ struct HourlyColumn: View {
         forecast.cloudCover > 60 ? .black : .white
     }
     
-    // Fog color: green (low) to red (high)
+    // Fog background: similar gradient to clouds (dark = low fog risk, light = high fog risk)
+    private var fogBackgroundColor: Color {
+        let percentage = Double(fogScore.percentage) / 100.0
+        // Interpolate from dark blue (0%) to light gray/white (100%)
+        let red = 10 + (230 * percentage)
+        let green = 20 + (220 * percentage)
+        let blue = 80 + (155 * percentage)
+        return Color(red: red/255, green: green/255, blue: blue/255)
+    }
+    
+    // Fog color: for text contrast (dark background → white, light background → black)
     private var fogColor: Color {
+        fogScore.percentage > 60 ? .black : .white
+    }
+    
+    // Legacy fog color for compatibility
+    private var fogLevelColor: Color {
         switch fogScore.percentage {
         case 0..<30:
             return .green

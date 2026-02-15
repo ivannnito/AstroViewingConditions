@@ -22,7 +22,7 @@ struct CurrentConditionsCard: View {
                     // Cloud Cover
                     ConditionItem(
                         icon: "cloud.fill",
-                        iconColor: cloudColor(for: forecast.cloudCover),
+                        iconColor: cloudIconColor(for: forecast.cloudCover),
                         value: "\(forecast.cloudCover)%",
                         label: "Cloud"
                     )
@@ -65,13 +65,17 @@ struct CurrentConditionsCard: View {
                     
                     let fogScore = FogCalculator.calculate(from: forecast)
                     if fogScore.percentage > 0 {
-                        HStack {
+                        HStack(spacing: 4) {
                             Image(systemName: "cloud.fog.fill")
-                                .foregroundStyle(fogColor(for: fogScore.percentage))
-                            Text("Fog: \(fogScore.percentage)%")
-                                .font(.subheadline)
-                                .foregroundStyle(fogColor(for: fogScore.percentage))
+                                .font(.system(size: 14))
+                                .foregroundStyle(fogTextColor(for: fogScore.percentage))
+                            Text("\(fogScore.percentage)%")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(fogTextColor(for: fogScore.percentage))
                         }
+                        .frame(width: 60, height: 28)
+                        .background(fogBackgroundColor(for: fogScore.percentage))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
                     }
                     
                     Spacer()
@@ -97,30 +101,39 @@ struct CurrentConditionsCard: View {
         #endif
     }
     
-    private func cloudColor(for percentage: Int) -> Color {
-        switch percentage {
-        case 0..<20:
-            return .green
-        case 20..<50:
-            return .yellow
-        case 50..<80:
-            return .orange
-        default:
-            return .red
-        }
+    // Cloud background: dark blue (clear) to whitish (cloudy)
+    private func cloudBackgroundColor(for percentage: Int) -> Color {
+        let coverage = Double(percentage) / 100.0
+        let red = 10 + (230 * coverage)
+        let green = 20 + (220 * coverage)
+        let blue = 80 + (155 * coverage)
+        return Color(red: red/255, green: green/255, blue: blue/255)
     }
     
-    private func fogColor(for percentage: Int) -> Color {
-        switch percentage {
-        case 0..<30:
-            return .green
-        case 30..<60:
-            return .yellow
-        case 60..<80:
-            return .orange
-        default:
-            return .red
-        }
+    // Cloud icon color: dark blue (clear) to whitish (cloudy)
+    private func cloudIconColor(for percentage: Int) -> Color {
+        let coverage = Double(percentage) / 100.0
+        let red = 10 + (230 * coverage)
+        let green = 20 + (220 * coverage)
+        let blue = 80 + (155 * coverage)
+        return Color(red: red/255, green: green/255, blue: blue/255)
+    }
+    
+    private func cloudTextColor(for percentage: Int) -> Color {
+        percentage > 60 ? .black : .white
+    }
+    
+    // Fog background: same gradient as clouds
+    private func fogBackgroundColor(for percentage: Int) -> Color {
+        let coverage = Double(percentage) / 100.0
+        let red = 10 + (230 * coverage)
+        let green = 20 + (220 * coverage)
+        let blue = 80 + (155 * coverage)
+        return Color(red: red/255, green: green/255, blue: blue/255)
+    }
+    
+    private func fogTextColor(for percentage: Int) -> Color {
+        percentage > 60 ? .black : .white
     }
 }
 
