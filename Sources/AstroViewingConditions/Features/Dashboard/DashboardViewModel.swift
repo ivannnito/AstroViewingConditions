@@ -6,7 +6,7 @@ public class DashboardViewModel {
     // Services
     private let weatherService = WeatherService()
     private let astronomyService = AstronomyService()
-    private let issService = ISSService()
+    private var issService: ISSService?
     
     // State
     public var viewingConditions: ViewingConditions?
@@ -14,6 +14,12 @@ public class DashboardViewModel {
     public var error: (any Error)?
     public var selectedDay: DaySelection = .today
     public var lastSuccessfulFetch: Date?
+    
+    private let apiKey: String
+    
+    public var hasISSConfigured: Bool {
+        !apiKey.isEmpty
+    }
     
     public enum DaySelection: Int, CaseIterable, Sendable {
         case today = 0
@@ -66,7 +72,12 @@ public class DashboardViewModel {
         viewingConditions?.fogScore
     }
     
-    public init() {}
+    public init(apiKey: String = "") {
+        self.apiKey = apiKey
+        if !apiKey.isEmpty {
+            self.issService = ISSService(apiKey: apiKey)
+        }
+    }
     
     public func loadConditions(for location: SavedLocation) async {
         isLoading = true
@@ -90,12 +101,16 @@ public class DashboardViewModel {
                 on: Date()
             )
             
-            // Fetch ISS passes
-            let issPasses = try await issService.fetchPasses(
-                latitude: location.latitude,
-                longitude: location.longitude,
-                number: 10
-            )
+            // Fetch ISS passes (only if API key is configured)
+            let issPasses: [ISSPass]
+            if let service = issService {
+                issPasses = try await service.fetchPasses(
+                    latitude: location.latitude,
+                    longitude: location.longitude
+                )
+            } else {
+                issPasses = []
+            }
             
             let fogScore = FogCalculator.calculateCurrent(from: forecasts)
             

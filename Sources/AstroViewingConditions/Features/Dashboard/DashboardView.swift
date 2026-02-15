@@ -3,7 +3,8 @@ import SwiftData
 
 public struct DashboardView: View {
     @Environment(\.modelContext) private var modelContext
-    @State private var viewModel = DashboardViewModel()
+    @AppStorage("n2yoApiKey") private var n2yoApiKey: String = ""
+    @State private var viewModel: DashboardViewModel
     @State private var locationManager = LocationManager()
     
     // Current location (not persisted)
@@ -13,7 +14,10 @@ public struct DashboardView: View {
         UnitConverter(unitSystem: UserDefaults.standard.selectedUnitSystem)
     }
     
-    public init() {}
+    public init() {
+        // Need to use a placeholder since we can't access @AppStorage in init
+        _viewModel = State(initialValue: DashboardViewModel(apiKey: ""))
+    }
     
     public var body: some View {
         NavigationStack {
@@ -49,11 +53,21 @@ public struct DashboardView: View {
             }
         }
         .task {
+            // Update view model with API key from storage
+            viewModel = DashboardViewModel(apiKey: n2yoApiKey)
             await loadCurrentLocation()
         }
         .onChange(of: locationManager.authorizationStatus) { _, _ in
             Task {
                 await loadCurrentLocation()
+            }
+        }
+        .onChange(of: n2yoApiKey) { _, newKey in
+            viewModel = DashboardViewModel(apiKey: newKey)
+            Task {
+                if let location = currentLocation {
+                    await viewModel.refresh(for: location)
+                }
             }
         }
     }
@@ -105,8 +119,8 @@ public struct DashboardView: View {
                     FogScoreView(fogScore: fogScore)
                 }
                 
-                // ISS passes
-                if !viewModel.currentISSPasses.isEmpty {
+                // ISS passes (only show if API key is configured)
+                if viewModel.hasISSConfigured && !viewModel.currentISSPasses.isEmpty {
                     ISSCard(passes: viewModel.currentISSPasses)
                 }
                 

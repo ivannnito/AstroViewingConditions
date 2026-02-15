@@ -2,25 +2,25 @@ import Foundation
 import CoreLocation
 
 public actor ISSService {
-    private let baseURL = "https://api.open-notify.org/iss-pass.json"
+    private let baseURL = "https://api.n2yo.com/rest/v1/satellite"
+    private let issNoradId = 25544
+    private let apiKey: String
     
-    public init() {}
+    public init(apiKey: String) {
+        self.apiKey = apiKey
+    }
     
     public func fetchPasses(
         latitude: Double,
         longitude: Double,
         altitude: Double = 0,
-        number: Int = 10
+        days: Int = 10,
+        minVisibility: Int = 60
     ) async throws -> [ISSPass] {
-        var components = URLComponents(string: baseURL)!
-        components.queryItems = [
-            URLQueryItem(name: "lat", value: String(latitude)),
-            URLQueryItem(name: "lon", value: String(longitude)),
-            URLQueryItem(name: "alt", value: String(altitude)),
-            URLQueryItem(name: "n", value: String(number))
-        ]
+        // N2YO endpoint: /visualpasses/{id}/{observer_lat}/{observer_lng}/{observer_alt}/{days}/{min_visibility}/
+        let urlString = "\(baseURL)/visualpasses/\(issNoradId)/\(latitude)/\(longitude)/\(Int(altitude))/\(days)/\(minVisibility)/&apiKey=\(apiKey)"
         
-        guard let url = components.url else {
+        guard let url = URL(string: urlString) else {
             throw ISSError.invalidURL
         }
         
@@ -32,37 +32,19 @@ public actor ISSService {
         }
         
         let decoder = JSONDecoder()
-        let issResponse = try decoder.decode(ISSResponse.self, from: data)
+        let issResponse = try decoder.decode(N2YOResponse.self, from: data)
         
-        guard issResponse.message == "success" else {
-            throw ISSError.apiError(issResponse.message)
+        guard issResponse.passes != nil else {
+            return []
         }
         
-        return issResponse.response.map { pass in
+        return issResponse.passes?.map { pass in
             ISSPass(
-                riseTime: Date(timeIntervalSince1970: TimeInterval(pass.risetime)),
+                riseTime: Date(timeIntervalSince1970: TimeInterval(pass.startUTC)),
                 duration: TimeInterval(pass.duration),
-                maxElevation: calculateMaxElevation(duration: TimeInterval(pass.duration))
+                maxElevation: pass.maxEl
             )
-        }
-    }
-    
-    /// Estimate max elevation based on pass duration
-    /// Longer passes typically reach higher elevations
-    private func calculateMaxElevation(duration: TimeInterval) -> Double {
-        // Rough estimation: longer duration = higher max elevation
-        // ISS orbit is ~90 minutes, so max pass is ~6-7 minutes at zenith
-        let minutes = duration / 60.0
-        
-        if minutes > 6 {
-            return 80 + Double.random(in: 0...10) // Near zenith
-        } else if minutes > 4 {
-            return 60 + Double.random(in: 0...20) // High elevation
-        } else if minutes > 2 {
-            return 40 + Double.random(in: 0...20) // Medium elevation
-        } else {
-            return 10 + Double.random(in: 0...30) // Lower elevation
-        }
+        } ?? []
     }
 }
 
@@ -74,23 +56,33 @@ public enum ISSError: Error {
     case apiError(String)
 }
 
-// MARK: - Response Models
+// MARK: - N2YO Response Models
 
-struct ISSResponse: Codable {
-    let message: String
-    let request: ISSRequest
-    let response: [ISSPassData]
+struct N2YOResponse: Codable {
+    let info: N2YOInfo
+    let passes: [N2YOPass]?
 }
 
-struct ISSRequest: Codable {
-    let latitude: Double
-    let longitude: Double
-    let altitude: Double
-    let passes: Int
-    let datetime: Int
+struct N2YOInfo: Codable {
+    let satid: Int
+    let satname: String
+    let transactionscount: Int
+    let passescount: Int?
 }
 
-struct ISSPassData: Codable {
-    let risetime: Int
+struct N2YOPass: Codable {
+    let startAz: Double
+    let startAzCompass: String
+    let startEl: Double
+    let startUTC: Int
+    let maxAz: Double
+    let maxAzCompass: String
+    let maxEl: Double
+    let maxUTC: Int
+    let endAz: Double
+    let endAzCompass: String
+    let endEl: Double
+    let endUTC: Int
+    let mag: Double
     let duration: Int
 }

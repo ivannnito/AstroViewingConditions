@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct SettingsView: View {
     @AppStorage("selectedUnitSystem") private var unitSystem: UnitSystem = .metric
+    @AppStorage("n2yoApiKey") private var n2yoApiKey: String = ""
     
     public init() {}
     
@@ -61,9 +62,25 @@ public struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Label("ISS Tracking", systemImage: "airplane")
                             .font(.subheadline)
-                        Text("Open Notify (open-notify.org)")
+                        Text("N2YO (n2yo.com)")
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                    }
+                }
+                
+                Section("ISS Tracking Configuration") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        TextField("N2YO API Key", text: $n2yoApiKey)
+                        
+                        if n2yoApiKey.isEmpty {
+                            Text("Enter your N2YO API key to enable ISS pass predictions. Get a free key at n2yo.com")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text("ISS tracking is enabled")
+                                .font(.caption)
+                                .foregroundStyle(.green)
+                        }
                     }
                 }
                 
