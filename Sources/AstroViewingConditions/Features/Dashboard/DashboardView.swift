@@ -146,11 +146,13 @@ public struct DashboardView: View {
                 // Day selector
                 daySelector
                 
-                // Current conditions summary
-                CurrentConditionsCard(
-                    forecast: viewModel.currentHourlyForecasts.first,
-                    unitConverter: unitConverter
-                )
+                // Current conditions summary (only for today)
+                if viewModel.selectedDay == .today {
+                    CurrentConditionsCard(
+                        forecast: viewModel.currentHourForecast,
+                        unitConverter: unitConverter
+                    )
+                }
                 
                 // Hourly forecast chart
                 HourlyForecastView(

@@ -56,6 +56,19 @@ public class DashboardViewModel {
         }
     }
     
+    public var currentHourForecast: HourlyForecast? {
+        let now = Date()
+        let calendar = Calendar.current
+        
+        // Find the forecast for the current hour
+        return currentHourlyForecasts.first { forecast in
+            let forecastHour = calendar.component(.hour, from: forecast.time)
+            let currentHour = calendar.component(.hour, from: now)
+            let isSameDay = calendar.isDate(forecast.time, inSameDayAs: now)
+            return isSameDay && forecastHour == currentHour
+        } ?? currentHourlyForecasts.first
+    }
+    
     public var currentSunEvents: SunEvents? {
         viewingConditions?.sunEvents
     }
