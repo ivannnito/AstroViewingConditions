@@ -3,6 +3,7 @@ import SwiftData
 
 public struct DashboardView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @AppStorage("n2yoApiKey") private var n2yoApiKey: String = ""
     @AppStorage("selectedLocationID") private var selectedLocationID: String = "current"
     @Query(sort: \SavedLocation.dateAdded, order: .reverse) private var savedLocations: [SavedLocation]
@@ -271,6 +272,11 @@ public struct DashboardView: View {
             }
         }
         .pickerStyle(.segmented)
+        .scaleEffect(isIPad ? 1.2 : 1.0)
+    }
+    
+    private var isIPad: Bool {
+        horizontalSizeClass == .regular
     }
     
     // MARK: - Helper Methods

@@ -3,6 +3,15 @@ import SwiftUI
 struct SunMoonCard: View {
     let sunEvents: SunEvents
     let moonInfo: MoonInfo
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    
+    private var isIPad: Bool {
+        horizontalSizeClass == .regular
+    }
+    
+    private var sunEventSpacing: CGFloat {
+        isIPad ? 60 : 20
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -11,7 +20,7 @@ struct SunMoonCard: View {
                 Label("Sun", systemImage: "sun.max.fill")
                     .font(.headline)
                 
-                HStack(spacing: 20) {
+                HStack(spacing: sunEventSpacing) {
                     SunEventItem(
                         icon: "sunrise.fill",
                         time: sunEvents.sunrise,
@@ -37,17 +46,27 @@ struct SunMoonCard: View {
                     }
                     
                     HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Start: \(DateFormatters.formatTime(sunEvents.astronomicalNightStart))")
-                                .font(.caption)
-                            Text("End: \(DateFormatters.formatTime(sunEvents.astronomicalNightEnd))")
-                                .font(.caption)
+                        HStack(spacing: 16) {
+                            Text(DateFormatters.formatTime(sunEvents.astronomicalNightStart))
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                            Text("to")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            Text(DateFormatters.formatTime(sunEvents.astronomicalNightEnd))
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
                         }
                         Spacer()
-                        Text(formatDuration(sunEvents.astronomicalNightDuration(on: sunEvents.sunrise)))
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(.indigo)
+                        HStack(spacing: 4) {
+                            Text("Duration:")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            Text(formatDuration(sunEvents.astronomicalNightDuration(on: sunEvents.sunrise)))
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.indigo)
+                        }
                     }
                 }
                 .padding(.top, 4)

@@ -3,6 +3,23 @@ import SwiftUI
 struct HourlyForecastView: View {
     let forecasts: [HourlyForecast]
     let unitConverter: UnitConverter
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    
+    private var isIPad: Bool {
+        horizontalSizeClass == .regular
+    }
+    
+    private var fontScale: CGFloat {
+        isIPad ? 1.3 : 1.0
+    }
+    
+    private var columnWidth: CGFloat {
+        isIPad ? 80 : 60
+    }
+    
+    private var labelColumnWidth: CGFloat {
+        isIPad ? 90 : 70
+    }
     
     private var upcomingForecasts: [HourlyForecast] {
         let now = Date()
@@ -33,15 +50,15 @@ struct HourlyForecastView: View {
                     // Fixed labels column (spacer)
                     VStack(alignment: .leading, spacing: 16) {
                         Text("")
-                            .frame(height: 28)
-                        MetricLabel(icon: "cloud.fill", label: "Cloud", color: .blue)
-                        MetricLabel(icon: "thermometer", label: "Temp", color: .orange)
-                        MetricLabel(icon: "humidity.fill", label: "Humidity", color: .cyan)
-                        MetricLabel(icon: "wind", label: "Wind", color: .gray)
-                        MetricLabel(icon: "arrow.up", label: "Dir", color: .gray)
-                        MetricLabel(icon: "cloud.fog.fill", label: "Fog", color: .gray)
+                            .frame(height: 28 * fontScale)
+                        MetricLabel(icon: "cloud.fill", label: "Cloud", color: .blue, fontScale: fontScale)
+                        MetricLabel(icon: "thermometer", label: "Temp", color: .orange, fontScale: fontScale)
+                        MetricLabel(icon: "humidity.fill", label: "Humidity", color: .cyan, fontScale: fontScale)
+                        MetricLabel(icon: "wind", label: "Wind", color: .gray, fontScale: fontScale)
+                        MetricLabel(icon: "arrow.up", label: "Dir", color: .gray, fontScale: fontScale)
+                        MetricLabel(icon: "cloud.fog.fill", label: "Fog", color: .gray, fontScale: fontScale)
                     }
-                    .frame(width: 70)
+                    .frame(width: labelColumnWidth)
                     
                     // Scrollable data
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -50,7 +67,9 @@ struct HourlyForecastView: View {
                                 HourlyColumn(
                                     forecast: forecast,
                                     unitConverter: unitConverter,
-                                    isNow: isCurrentHour(forecast.time)
+                                    isNow: isCurrentHour(forecast.time),
+                                    fontScale: fontScale,
+                                    columnWidth: columnWidth
                                 )
                             }
                         }
@@ -82,17 +101,18 @@ struct MetricLabel: View {
     let icon: String
     let label: String
     let color: Color
+    var fontScale: CGFloat = 1.0
     
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: icon)
-                .font(.system(size: 11))
+                .font(.system(size: 11 * fontScale))
                 .foregroundStyle(color)
             Text(label)
-                .font(.system(size: 11, weight: .medium))
+                .font(.system(size: 11 * fontScale, weight: .medium))
                 .foregroundStyle(.primary)
         }
-        .frame(height: 20)
+        .frame(height: 20 * fontScale)
     }
 }
 
@@ -100,6 +120,8 @@ struct HourlyColumn: View {
     let forecast: HourlyForecast
     let unitConverter: UnitConverter
     let isNow: Bool
+    var fontScale: CGFloat = 1.0
+    var columnWidth: CGFloat = 60
     
     private var fogScore: FogScore {
         FogCalculator.calculate(from: forecast)
@@ -109,66 +131,66 @@ struct HourlyColumn: View {
         VStack(spacing: 16) {
             // Time header
             Text(DateFormatters.formatTime(forecast.time))
-                .font(.system(size: 12, weight: isNow ? .bold : .medium))
+                .font(.system(size: 12 * fontScale, weight: isNow ? .bold : .medium))
                 .foregroundStyle(isNow ? Color.accentColor : .primary)
-                .frame(height: 28)
+                .frame(height: 28 * fontScale)
             
             // Cloud cover with astronomy-friendly coloring
             Text("\(forecast.cloudCover)%")
-                .font(.system(size: 13, weight: .semibold))
+                .font(.system(size: 13 * fontScale, weight: .semibold))
                 .foregroundStyle(cloudTextColor)
-                .frame(height: 20)
+                .frame(height: 20 * fontScale)
                 .frame(maxWidth: .infinity)
                 .background(cloudBackgroundColor)
                 .clipShape(RoundedRectangle(cornerRadius: 4))
             
             // Temperature
             Text(unitConverter.formatTemperature(forecast.temperature))
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(size: 13 * fontScale, weight: .medium))
                 .foregroundStyle(.primary)
-                .frame(height: 20)
+                .frame(height: 20 * fontScale)
             
             // Humidity
             Text("\(forecast.humidity)%")
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(size: 13 * fontScale, weight: .medium))
                 .foregroundStyle(.primary)
-                .frame(height: 20)
+                .frame(height: 20 * fontScale)
             
             // Wind speed
             Text(unitConverter.formatWindSpeed(forecast.windSpeed))
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 12 * fontScale, weight: .medium))
                 .foregroundStyle(.primary)
-                .frame(height: 20)
+                .frame(height: 20 * fontScale)
             
             // Wind direction
             HStack(spacing: 2) {
                 Image(systemName: "arrow.up")
-                    .font(.system(size: 10))
+                    .font(.system(size: 10 * fontScale))
                     .rotationEffect(.degrees(Double(forecast.windDirection)))
                 Text("\(forecast.windDirection)")
-                    .font(.system(size: 11))
+                    .font(.system(size: 11 * fontScale))
             }
             .foregroundStyle(.secondary)
-            .frame(height: 20)
+            .frame(height: 20 * fontScale)
             
             // Fog risk
             if fogScore.percentage > 0 {
                 Text("\(fogScore.percentage)%")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.system(size: 11 * fontScale, weight: .semibold))
                     .foregroundStyle(.white)
-                    .frame(height: 20)
+                    .frame(height: 20 * fontScale)
                     .frame(maxWidth: .infinity)
                     .background(fogColor)
                     .clipShape(RoundedRectangle(cornerRadius: 4))
             } else {
                 Text("—")
-                    .font(.system(size: 11))
+                    .font(.system(size: 11 * fontScale))
                     .foregroundStyle(.secondary)
-                    .frame(height: 20)
+                    .frame(height: 20 * fontScale)
             }
         }
-        .frame(width: 60)
-        .padding(.horizontal, 4)
+        .frame(width: columnWidth)
+        .padding(.horizontal, 4 * fontScale)
         .background(isNow ? Color.accentColor.opacity(0.08) : Color.clear)
         .clipShape(RoundedRectangle(cornerRadius: 6))
     }

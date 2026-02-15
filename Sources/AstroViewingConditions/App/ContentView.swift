@@ -3,9 +3,14 @@ import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     
     var body: some View {
-        TabView {
+        let isLandscape = verticalSizeClass == .compact
+        let isRegular = horizontalSizeClass == .regular
+        
+        return TabView {
             DashboardView()
                 .tabItem {
                     Label("Dashboard", systemImage: "star.fill")
@@ -21,6 +26,7 @@ struct ContentView: View {
                     Label("Settings", systemImage: "gear")
                 }
         }
+        .dynamicTypeSize(isRegular ? .xxLarge : (isLandscape ? .large : .medium))
     }
 }
 
