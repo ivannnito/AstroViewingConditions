@@ -21,6 +21,9 @@ let package = Package(
             name: "AstroViewingConditions",
             dependencies: [
                 .product(name: "SunCalc", package: "SunCalc"),
+            ],
+            resources: [
+                .process("Resources")
             ]
         ),
     ]

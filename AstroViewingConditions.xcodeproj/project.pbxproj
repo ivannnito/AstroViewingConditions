@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -29,11 +29,13 @@
 		D7533D39FBBCD71940705306 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5044EFABED3171D24C921DE7 /* DashboardViewModel.swift */; };
 		DB3AA456B38B3B96977F386B /* LocationSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54B0BFCDF40C399EA4824A6 /* LocationSearchView.swift */; };
 		DEB630F899EAD1D376D37DCD /* FogCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3248700EC9858D76C238BF8E /* FogCalculator.swift */; };
+		E3533711DF43E0610773DC5E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 078C87DAF5B0087DCFABCCE9 /* Assets.xcassets */; };
 		EDE97CF450FFFBAD6D9491D7 /* SavedLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ECD54B2FD405293C86CB350 /* SavedLocation.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		03443CEECBDFE531EBA49F66 /* ViewingConditions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewingConditions.swift; sourceTree = "<group>"; };
+		078C87DAF5B0087DCFABCCE9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		12C80FE005982B8A23A5C4F8 /* ISSService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ISSService.swift; sourceTree = "<group>"; };
 		3248700EC9858D76C238BF8E /* FogCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FogCalculator.swift; sourceTree = "<group>"; };
 		327636F4ECBD05E4499DD4EA /* UnitConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnitConverter.swift; sourceTree = "<group>"; };
@@ -51,7 +53,7 @@
 		AC1828DA0E16C401F2724417 /* FogScoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FogScoreView.swift; sourceTree = "<group>"; };
 		B54B0BFCDF40C399EA4824A6 /* LocationSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationSearchView.swift; sourceTree = "<group>"; };
 		B71EA0245C32D0AA9918A074 /* SunMoonCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SunMoonCard.swift; sourceTree = "<group>"; };
-		BC522BA09BF9FC4E4BB1FB46 /* AstroViewingConditions.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AstroViewingConditions.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BC522BA09BF9FC4E4BB1FB46 /* AstroViewingConditions.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AstroViewingConditions.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0CECDC09712607CFA0A4163 /* AstronomyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AstronomyService.swift; sourceTree = "<group>"; };
 		D31C1D0B71D80A12EF7E16F2 /* HourlyForecastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HourlyForecastView.swift; sourceTree = "<group>"; };
 		D62CAF22CD36ECE061871AE1 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
@@ -125,6 +127,7 @@
 				2F317DAA1B121F4A70A8A66F /* App */,
 				31C67BE464E1470DD7EF4177 /* Core */,
 				9C09DA6781CC3C7D5ABAE63B /* Features */,
+				965B851B03B7517EE2C2D172 /* Resources */,
 			);
 			path = AstroViewingConditions;
 			sourceTree = "<group>";
@@ -153,6 +156,14 @@
 				BC522BA09BF9FC4E4BB1FB46 /* AstroViewingConditions.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		965B851B03B7517EE2C2D172 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				078C87DAF5B0087DCFABCCE9 /* Assets.xcassets */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		9C09DA6781CC3C7D5ABAE63B /* Features */ = {
@@ -213,6 +224,7 @@
 			buildConfigurationList = FA8C12B91E9AB26AF991F3D9 /* Build configuration list for PBXNativeTarget "AstroViewingConditions" */;
 			buildPhases = (
 				6BAE4E30032A7AA42DBA1E92 /* Sources */,
+				1AF84CDC9F6734853809F867 /* Resources */,
 				3A1C12B081076E3B08D9E6BA /* Frameworks */,
 			);
 			buildRules = (
@@ -249,7 +261,6 @@
 			packageReferences = (
 				5E22E280A3E78D8A7D7622DE /* XCRemoteSwiftPackageReference "SunCalc" */,
 			);
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -257,6 +268,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1AF84CDC9F6734853809F867 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E3533711DF43E0610773DC5E /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		6BAE4E30032A7AA42DBA1E92 /* Sources */ = {
@@ -295,10 +317,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ALV53VY374;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Sources/App/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -372,10 +397,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ALV53VY374;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Sources/App/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

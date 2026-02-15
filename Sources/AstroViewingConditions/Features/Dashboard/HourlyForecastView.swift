@@ -4,20 +4,34 @@ struct HourlyForecastView: View {
     let forecasts: [HourlyForecast]
     let unitConverter: UnitConverter
     
+    private var upcomingForecasts: [HourlyForecast] {
+        let now = Date()
+        let calendar = Calendar.current
+        
+        return forecasts.filter { forecast in
+            // Get the start of the hour for both times
+            guard let forecastHour = calendar.dateInterval(of: .hour, for: forecast.time)?.start,
+                  let currentHour = calendar.dateInterval(of: .hour, for: now)?.start else {
+                return false
+            }
+            return forecastHour >= currentHour
+        }
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Label("Hourly Forecast", systemImage: "clock")
                 .font(.headline)
             
-            if forecasts.isEmpty {
-                Text("No forecast data available")
+            if upcomingForecasts.isEmpty {
+                Text("No upcoming forecast data available")
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding()
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
-                        ForEach(forecasts.prefix(24)) { forecast in
+                        ForEach(upcomingForecasts.prefix(24)) { forecast in
                             HourlyCell(forecast: forecast, unitConverter: unitConverter)
                         }
                     }
