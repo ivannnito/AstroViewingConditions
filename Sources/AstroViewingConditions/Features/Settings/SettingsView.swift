@@ -101,7 +101,7 @@ public struct SettingsView: View {
                     }
                     .padding(.vertical, 4)
                     
-                    Link(destination: URL(string: "https://github.com/yourusername/AstroViewingConditions")!) {
+                    Link(destination: URL(string: "https://github.com/gdombiak/AstroViewingConditions")!) {
                         Label("View on GitHub", systemImage: "link")
                     }
                 }
