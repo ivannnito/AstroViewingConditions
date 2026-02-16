@@ -11,6 +11,7 @@ public struct LocationSearchView: View {
     @State private var isSearching = false
     @State private var searchError: Error?
     @State private var showingMapPicker = false
+    @State private var manualLocationName = ""
     @State private var manualCoordinates = ""
     
     private let weatherService = WeatherService()
@@ -63,6 +64,8 @@ public struct LocationSearchView: View {
                 
                 // Manual Coordinates Section
                 Section {
+                    TextField("Location name", text: $manualLocationName)
+                    
                     TextField("Lat, Long (e.g., 40.7128, -74.0060)", text: $manualCoordinates)
                         .autocorrectionDisabled()
                         #if os(iOS)
@@ -72,7 +75,7 @@ public struct LocationSearchView: View {
                     Button("Add Coordinates") {
                         addManualCoordinates()
                     }
-                    .disabled(!isValidCoordinateFormat(manualCoordinates))
+                    .disabled(manualLocationName.isEmpty || !isValidCoordinateFormat(manualCoordinates))
                 } header: {
                     Text("Manual Entry")
                 }
@@ -161,7 +164,7 @@ public struct LocationSearchView: View {
         }
         
         let location = SavedLocation(
-            name: "\(String(format: "%.4f", lat)), \(String(format: "%.4f", lon))",
+            name: manualLocationName.trimmingCharacters(in: .whitespacesAndNewlines),
             latitude: lat,
             longitude: lon
         )
