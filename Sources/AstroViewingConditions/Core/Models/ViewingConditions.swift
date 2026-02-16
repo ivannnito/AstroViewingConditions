@@ -2,9 +2,9 @@ import Foundation
 
 // MARK: - Viewing Conditions
 
-public struct ViewingConditions: Sendable {
+public struct ViewingConditions: Sendable, Codable {
     public let fetchedAt: Date
-    public let location: SavedLocation
+    public let location: CachedLocation
     public let hourlyForecasts: [HourlyForecast]
     public let dailySunEvents: [SunEvents]
     public let dailyMoonInfo: [MoonInfo]
@@ -14,6 +14,24 @@ public struct ViewingConditions: Sendable {
     public init(
         fetchedAt: Date,
         location: SavedLocation,
+        hourlyForecasts: [HourlyForecast],
+        dailySunEvents: [SunEvents],
+        dailyMoonInfo: [MoonInfo],
+        issPasses: [ISSPass],
+        fogScore: FogScore
+    ) {
+        self.fetchedAt = fetchedAt
+        self.location = CachedLocation(from: location)
+        self.hourlyForecasts = hourlyForecasts
+        self.dailySunEvents = dailySunEvents
+        self.dailyMoonInfo = dailyMoonInfo
+        self.issPasses = issPasses
+        self.fogScore = fogScore
+    }
+    
+    public init(
+        fetchedAt: Date,
+        location: CachedLocation,
         hourlyForecasts: [HourlyForecast],
         dailySunEvents: [SunEvents],
         dailyMoonInfo: [MoonInfo],
@@ -32,7 +50,7 @@ public struct ViewingConditions: Sendable {
 
 // MARK: - Hourly Forecast
 
-public struct HourlyForecast: Identifiable, Sendable {
+public struct HourlyForecast: Identifiable, Sendable, Codable {
     public let id: UUID
     public let time: Date
     public let cloudCover: Int
@@ -71,7 +89,7 @@ public struct HourlyForecast: Identifiable, Sendable {
 
 // MARK: - Fog Score
 
-public struct FogScore: Sendable {
+public struct FogScore: Sendable, Codable {
     public let percentage: Int
     public let factors: [FogFactor]
     
@@ -80,7 +98,7 @@ public struct FogScore: Sendable {
         self.factors = factors
     }
     
-    public enum FogFactor: String, CaseIterable, Sendable {
+    public enum FogFactor: String, CaseIterable, Sendable, Codable {
         case highHumidity = "High Humidity (>95%)"
         case lowTempDewDiff = "Low Temp/Dew Point Difference"
         case lowVisibility = "Low Visibility (<1km)"
@@ -90,7 +108,7 @@ public struct FogScore: Sendable {
 
 // MARK: - Sun Events
 
-public struct SunEvents: Sendable {
+public struct SunEvents: Sendable, Codable {
     public let sunrise: Date
     public let sunset: Date
     public let civilTwilightBegin: Date
@@ -151,7 +169,7 @@ public struct SunEvents: Sendable {
 
 // MARK: - Moon Info
 
-public struct MoonInfo: Sendable {
+public struct MoonInfo: Sendable, Codable {
     public let phase: Double
     public let phaseName: String
     public let altitude: Double
@@ -175,7 +193,7 @@ public struct MoonInfo: Sendable {
 
 // MARK: - ISS Pass
 
-public struct ISSPass: Identifiable, Sendable {
+public struct ISSPass: Identifiable, Sendable, Codable {
     public let id: UUID
     public let riseTime: Date
     public let duration: TimeInterval

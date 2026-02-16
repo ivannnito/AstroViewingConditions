@@ -1,5 +1,11 @@
 import SwiftUI
 
+private enum StorageKeys {
+    static let cachedConditions = "cachedViewingConditions"
+    static let cachedLocationLat = "cachedLocationLatitude"
+    static let cachedLocationLon = "cachedLocationLongitude"
+}
+
 @MainActor
 @Observable
 public class DashboardViewModel {
@@ -15,7 +21,10 @@ public class DashboardViewModel {
     public var selectedDay: DaySelection = .today
     public var lastSuccessfulFetch: Date?
     
-    private let apiKey: String
+    private var apiKey: String
+    private let userDefaults = UserDefaults.standard
+    
+    private static let staleThresholdSeconds: TimeInterval = 6 * 60 * 60 // 6 hours
     
     public var hasISSConfigured: Bool {
         !apiKey.isEmpty
@@ -40,7 +49,11 @@ public class DashboardViewModel {
     
     public var isDataStale: Bool {
         guard let lastFetch = lastSuccessfulFetch else { return true }
-        return Date().timeIntervalSince(lastFetch) > 1800 // 30 minutes
+        return Date().timeIntervalSince(lastFetch) > Self.staleThresholdSeconds
+    }
+    
+    public var shouldFetchFreshConditions: Bool {
+        isDataStale || viewingConditions == nil
     }
     
     public var currentHourlyForecasts: [HourlyForecast] {
@@ -98,15 +111,30 @@ public class DashboardViewModel {
         }
     }
     
+    public func updateAPIKey(_ newKey: String) {
+        guard newKey != apiKey else { return }
+        self.apiKey = newKey
+        if !newKey.isEmpty {
+            self.issService = ISSService(apiKey: newKey)
+        } else {
+            self.issService = nil
+        }
+    }
+    
     public func loadConditions(for location: SavedLocation) async {
         isLoading = true
         error = nil
         
+        let latitude = location.latitude
+        let longitude = location.longitude
+        let locationName = location.name
+        let locationElevation = location.elevation
+        
         do {
             // Fetch weather data
             let forecasts = try await weatherService.fetchForecast(
-                latitude: location.latitude,
-                longitude: location.longitude,
+                latitude: latitude,
+                longitude: longitude,
                 days: 3
             )
             
@@ -119,11 +147,13 @@ public class DashboardViewModel {
             for dayOffset in 0..<3 {
                 let date = calendar.date(byAdding: .day, value: dayOffset, to: startOfToday)!
                 let sunEvents = await astronomyService.calculateSunEvents(
-                    for: location,
+                    latitude: latitude,
+                    longitude: longitude,
                     on: date
                 )
                 let moonInfo = await astronomyService.calculateMoonInfo(
-                    for: location,
+                    latitude: latitude,
+                    longitude: longitude,
                     on: date
                 )
                 dailySunEvents.append(sunEvents)
@@ -134,8 +164,8 @@ public class DashboardViewModel {
             let issPasses: [ISSPass]
             if let service = issService {
                 issPasses = try await service.fetchPasses(
-                    latitude: location.latitude,
-                    longitude: location.longitude
+                    latitude: latitude,
+                    longitude: longitude
                 )
             } else {
                 issPasses = []
@@ -143,16 +173,23 @@ public class DashboardViewModel {
             
             let fogScore = FogCalculator.calculateCurrent(from: forecasts)
             
-            viewingConditions = ViewingConditions(
+            let cachedLocation = CachedLocation(
+                name: locationName,
+                latitude: latitude,
+                longitude: longitude,
+                elevation: locationElevation
+            )
+            
+            let newConditions = ViewingConditions(
                 fetchedAt: Date(),
-                location: location,
+                location: cachedLocation,
                 hourlyForecasts: forecasts,
                 dailySunEvents: dailySunEvents,
                 dailyMoonInfo: dailyMoonInfo,
                 issPasses: issPasses,
                 fogScore: fogScore
             )
-            
+            viewingConditions = newConditions
             lastSuccessfulFetch = Date()
             
         } catch {
@@ -164,5 +201,53 @@ public class DashboardViewModel {
     
     public func refresh(for location: SavedLocation) async {
         await loadConditions(for: location)
+    }
+    
+    public func saveToCache() {
+        guard let conditions = viewingConditions else { return }
+        
+        do {
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(conditions)
+            userDefaults.set(data, forKey: StorageKeys.cachedConditions)
+            userDefaults.set(conditions.location.latitude, forKey: StorageKeys.cachedLocationLat)
+            userDefaults.set(conditions.location.longitude, forKey: StorageKeys.cachedLocationLon)
+        } catch {
+            print("Failed to cache conditions: \(error)")
+        }
+    }
+    
+    public func loadFromCache() -> Bool {
+        guard let data = userDefaults.data(forKey: StorageKeys.cachedConditions) else {
+            return false
+        }
+        
+        do {
+            let decoder = JSONDecoder()
+            let conditions = try decoder.decode(ViewingConditions.self, from: data)
+            
+            self.viewingConditions = conditions
+            self.lastSuccessfulFetch = conditions.fetchedAt
+            
+            return true
+        } catch {
+            return false
+        }
+    }
+    
+    public func loadConditionsIfNeeded(for location: SavedLocation) async {
+        let loadedFromCache = loadFromCache()
+        
+        // Check if cached location matches the requested location
+        let cachedLocationMatches = viewingConditions?.location.name == location.name
+        
+        if shouldFetchFreshConditions || !cachedLocationMatches {
+            await loadConditions(for: location)
+            saveToCache()
+        } else if !loadedFromCache {
+            viewingConditions = nil
+            await loadConditions(for: location)
+            saveToCache()
+        }
     }
 }

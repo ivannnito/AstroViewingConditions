@@ -7,12 +7,13 @@ public struct DashboardView: View {
     @AppStorage("n2yoApiKey") private var n2yoApiKey: String = ""
     @AppStorage("selectedLocationID") private var selectedLocationID: String = "current"
     @Query(sort: \SavedLocation.dateAdded, order: .reverse) private var savedLocations: [SavedLocation]
-    @State private var viewModel: DashboardViewModel
+    @State private var viewModel = DashboardViewModel(apiKey: "")
     @State private var locationManager = LocationManager()
     
     // Current location (not persisted)
     @State private var currentLocation: SavedLocation?
     @State private var showingLocationPicker = false
+    @State private var lastActiveCheck = Date()
     
     private var unitConverter: UnitConverter {
         UnitConverter(unitSystem: UserDefaults.standard.selectedUnitSystem)
@@ -27,11 +28,6 @@ public struct DashboardView: View {
     
     private var selectedLocationName: String {
         selectedLocation?.name ?? "Astro Conditions"
-    }
-    
-    public init() {
-        // Need to use a placeholder since we can't access @AppStorage in init
-        _viewModel = State(initialValue: DashboardViewModel(apiKey: ""))
     }
     
     public var body: some View {
@@ -67,6 +63,7 @@ public struct DashboardView: View {
                             Task {
                                 if let location = selectedLocation {
                                     await viewModel.refresh(for: location)
+                                    viewModel.saveToCache()
                                 }
                             }
                         }) {
@@ -85,16 +82,16 @@ public struct DashboardView: View {
             }
         }
         .task {
-            // Update view model with API key from storage
-            viewModel = DashboardViewModel(apiKey: n2yoApiKey)
+            viewModel.updateAPIKey(n2yoApiKey)
             await loadCurrentLocation()
-            // After loading current location, check if we should load a saved location
             if selectedLocationID != "current" {
                 if let location = selectedLocation {
-                    await viewModel.loadConditions(for: location)
+                    await viewModel.loadConditionsIfNeeded(for: location)
+                    viewModel.saveToCache()
                 }
             } else if let location = currentLocation {
-                await viewModel.loadConditions(for: location)
+                await viewModel.loadConditionsIfNeeded(for: location)
+                viewModel.saveToCache()
             }
         }
         .onChange(of: locationManager.authorizationStatus) { _, _ in
@@ -102,25 +99,39 @@ public struct DashboardView: View {
                 await loadCurrentLocation()
                 if selectedLocationID != "current" {
                     if let location = selectedLocation {
-                        await viewModel.loadConditions(for: location)
+                        await viewModel.loadConditionsIfNeeded(for: location)
+                        viewModel.saveToCache()
                     }
                 } else if let location = currentLocation {
-                    await viewModel.loadConditions(for: location)
+                    await viewModel.loadConditionsIfNeeded(for: location)
+                    viewModel.saveToCache()
                 }
             }
         }
         .onChange(of: n2yoApiKey) { _, newKey in
-            viewModel = DashboardViewModel(apiKey: newKey)
+            viewModel.updateAPIKey(newKey)
             Task {
                 if let location = selectedLocation {
                     await viewModel.refresh(for: location)
+                    viewModel.saveToCache()
                 }
             }
         }
         .onChange(of: selectedLocationID) { _, _ in
             Task {
                 if let location = selectedLocation {
-                    await viewModel.loadConditions(for: location)
+                    await viewModel.loadConditionsIfNeeded(for: location)
+                    viewModel.saveToCache()
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            lastActiveCheck = Date()
+            // Check if we need to refresh due to staleness
+            if viewModel.isDataStale, let location = selectedLocation {
+                Task {
+                    await viewModel.refresh(for: location)
+                    viewModel.saveToCache()
                 }
             }
         }
@@ -176,20 +187,18 @@ public struct DashboardView: View {
                 }
                 
                 // Last updated
-                Text("Last updated: \(DateFormatters.timeAgo(from: conditions.fetchedAt))")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .padding(.top)
+                if let fetchedAt = viewModel.viewingConditions?.fetchedAt {
+                    Text("Last updated: \(DateFormatters.timeAgo(from: fetchedAt))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.top)
+                        .id(lastActiveCheck) // Force re-render when app becomes active
+                }
             }
             .padding()
         }
-        .refreshable {
-            if let location = selectedLocation {
-                await viewModel.refresh(for: location)
-            }
-        }
     }
-    
+
     private var loadingView: some View {
         VStack(spacing: 16) {
             ProgressView()
@@ -254,7 +263,7 @@ public struct DashboardView: View {
     private var staleDataBanner: some View {
         HStack {
             Image(systemName: "exclamationmark.triangle.fill")
-            Text("Data may be outdated. Pull to refresh.")
+            Text("Data may be outdated. Tap refresh button.")
             Spacer()
         }
         .font(.caption)
@@ -305,7 +314,8 @@ public struct DashboardView: View {
             )
             
             if let location = currentLocation {
-                await viewModel.loadConditions(for: location)
+                await viewModel.loadConditionsIfNeeded(for: location)
+                viewModel.saveToCache()
             }
         } catch {
             viewModel.error = error

@@ -5,34 +5,35 @@ public actor AstronomyService {
     public init() {}
     
     public func calculateSunEvents(
-        for location: SavedLocation,
+        latitude: Double,
+        longitude: Double,
         on date: Date
     ) -> SunEvents {
         do {
             // Visual sunrise/sunset
             let visualTimes = try SunTimes.compute()
-                .at(location.latitude, location.longitude)
+                .at(latitude, longitude)
                 .on(date)
                 .twilight(Twilight.visual)
                 .execute()
             
             // Civil twilight
             let civilTimes = try SunTimes.compute()
-                .at(location.latitude, location.longitude)
+                .at(latitude, longitude)
                 .on(date)
                 .twilight(Twilight.civil)
                 .execute()
             
             // Nautical twilight
             let nauticalTimes = try SunTimes.compute()
-                .at(location.latitude, location.longitude)
+                .at(latitude, longitude)
                 .on(date)
                 .twilight(Twilight.nautical)
                 .execute()
             
             // Astronomical twilight
             let astronomicalTimes = try SunTimes.compute()
-                .at(location.latitude, location.longitude)
+                .at(latitude, longitude)
                 .on(date)
                 .twilight(Twilight.astronomical)
                 .execute()
@@ -64,7 +65,8 @@ public actor AstronomyService {
     }
     
     public func calculateMoonInfo(
-        for location: SavedLocation,
+        latitude: Double,
+        longitude: Double,
         on date: Date
     ) -> MoonInfo {
         do {
@@ -75,7 +77,7 @@ public actor AstronomyService {
             
             // Moon position
             let position = try MoonPosition.compute()
-                .at(location.latitude, location.longitude)
+                .at(latitude, longitude)
                 .on(date)
                 .execute()
             
